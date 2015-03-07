@@ -1,0 +1,16 @@
+#!/bin/bash
+
+TMP_XPI=$(mktemp -d -t xpi_unpack)
+git checkout official
+unzip $1 -d $TMP_XPI/
+pushd $TMP_XPI/
+pushd chrome
+jar xvf rikaichan.jar
+rm rikaichan.jar
+popd
+find . -type f -exec dos2unix -k -s -o {} ';'
+mv chrome.manifest chrome.manifest.out
+cat chrome.manifest.out | sed 's/jar:chrome\/rikaichan.jar\//chrome\//' > chrome.manifest
+popd
+rsync --remove-source-files -a $TMP_XPI/ ./
+rm -rf $TMP_XPI
