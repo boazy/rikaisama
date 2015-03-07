@@ -295,17 +295,6 @@ var rcxEpwing =
         return;
       }
 
-      let tryOpenFile = function(path) {
-        var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces["nsILocalFile"]);
-        file.initWithPath(path);
-        if (file.exists()) {
-          return file;
-        }
-        else {
-          return null;
-        }
-      };
-
       if (useWine)
       {
         // Create the file object that contains the location of the
@@ -331,15 +320,6 @@ var rcxEpwing =
       }
       else
       {
-        // Override eplkup with file in path
-        if (osString !== 'WINNT') {
-          let nativeExec = tryOpenFile('/usr/bin/eplkup')
-            || tryOpenFile('/usr/local/bin/eplkup');
-          if (nativeExec != null) {
-            eplkupTool = nativeExec;
-          }
-        }
-        
         // Create the process object that will use eplkup
         var process = Components.classes['@mozilla.org/process/util;1']
           .createInstance(Components.interfaces.nsIProcess);
