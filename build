@@ -1,0 +1,19 @@
+#/bin/bash
+
+rm -rf out
+rm -rf stage
+mkdir stage
+mkdir out
+cp -r src/ stage/
+cd stage
+rm chrome.manifest
+mv chrome.manifest.out chrome.manifest
+cd chrome
+zip -r ../rikaichan.jar *
+cd ..
+rm -rf chrome
+mkdir chrome
+mv rikaichan.jar chrome/
+zip -r ../out/rikaichan-mac-linux.xpi *
+cd ..
+
