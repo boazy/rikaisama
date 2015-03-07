@@ -183,19 +183,44 @@ var rcxEpwing =
   */
   doEplkup: function(dicPath, inputText, argList, callback)
   {
-    // Create the file object that contains the location of eplkup.exe
-    var eplkupTool = Components.classes["@mozilla.org/file/directory_service;1"]
+    // Get a string identifying the current OS
+    let osString = Components.classes["@mozilla.org/xre/app-info;1"]
+      .getService(Components.interfaces.nsIXULRuntime).OS;
+
+    let useWine = false;
+
+    // Create the file object that contains the location of eplkup(.exe)
+    let eplkupTool = Components.classes["@mozilla.org/file/directory_service;1"]
       .getService(Components.interfaces.nsIProperties)
       .get("ProfD", Components.interfaces.nsILocalFile);
     eplkupTool.append("extensions");
     eplkupTool.append(rcxEpwing.id); // GUID of extension
     eplkupTool.append("epwing");
-    eplkupTool.append("eplkup.exe");
+    if (osString === 'Darwin')
+    {
+      eplkupTool.append("osx");
+    }
+    else if (osString === 'Linux')
+    {
+      eplkupTool.append("linux");
+    }
+    else
+    {
+      useWine = true;
+    }
+    if (osString === 'WINNT' || useWine) {
+      eplkupTool.append("windows");
+      eplkupTool.append("eplkup.exe");
+    }
+    else
+    {
+      eplkupTool.append("eplkup");
+    }
 
     // Does the EPWING lookup tool exist?
     if(!eplkupTool.exists())
     {
-      callback("Error");
+      callback("Error: no executable found.");
       return;
     }
 
@@ -270,10 +295,6 @@ var rcxEpwing =
         return;
       }
 
-      // Get a string identifying the current OS
-      var osString = Components.classes["@mozilla.org/xre/app-info;1"]
-        .getService(Components.interfaces.nsIXULRuntime).OS;
-
       let tryOpenFile = function(path) {
         var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces["nsILocalFile"]);
         file.initWithPath(path);
@@ -285,42 +306,40 @@ var rcxEpwing =
         }
       };
 
-      if(osString == "Linux" || osString == "Darwin")
+      if (useWine)
       {
-        let nativeExec = tryOpenFile('/usr/bin/eplkup')
-          || tryOpenFile('/usr/local/bin/eplkup');
+        // Create the file object that contains the location of the
+        // bash script that will call eplkup with wine
+        var eplkupToolDriver = Components.classes["@mozilla.org/file/directory_service;1"]
+          .getService(Components.interfaces.nsIProperties)
+          .get("ProfD", Components.interfaces.nsILocalFile);
+        eplkupToolDriver.append("extensions");
+        eplkupToolDriver.append(rcxEpwing.id); // GUID of extension
+        eplkupToolDriver.append("epwing");
+        eplkupToolDriver.append("run_eplkup.sh");
 
-        if (nativeExec !== null) {
-          var process = Components.classes['@mozilla.org/process/util;1']
-            .createInstance(Components.interfaces.nsIProcess);
-          process.init(nativeExec);
-          var eplkupArgs = argList;
-        }
-        else {
-          // Create the file object that contains the location of the
-          // bash script that will call eplkup with wine
-          var eplkupToolDriver = Components.classes["@mozilla.org/file/directory_service;1"]
-            .getService(Components.interfaces.nsIProperties)
-            .get("ProfD", Components.interfaces.nsILocalFile);
-          eplkupToolDriver.append("extensions");
-          eplkupToolDriver.append(rcxEpwing.id); // GUID of extension
-          eplkupToolDriver.append("epwing");
-          eplkupToolDriver.append("run_eplkup.sh");
+        eplkupToolDriver.permissions = 0744;
 
-          eplkupToolDriver.permissions = 0744;
+        // Create the process object that will use the bash script
+        var process = Components.classes['@mozilla.org/process/util;1']
+         .createInstance(Components.interfaces.nsIProcess);
+        process.init(eplkupToolDriver);
 
-          // Create the process object that will use the bash script
-          var process = Components.classes['@mozilla.org/process/util;1']
-           .createInstance(Components.interfaces.nsIProcess);
-          process.init(eplkupToolDriver);
-
-          // Create the arguments to the bash script
-          var eplkupArgs = argList;
-          argList.unshift(eplkupTool.path);
-        }
+        // Create the arguments to the bash script
+        var eplkupArgs = argList;
+        argList.unshift(eplkupTool.path);
       }
       else
       {
+        // Override eplkup with file in path
+        if (osString !== 'WINNT') {
+          let nativeExec = tryOpenFile('/usr/bin/eplkup')
+            || tryOpenFile('/usr/local/bin/eplkup');
+          if (nativeExec != null) {
+            eplkupTool = nativeExec;
+          }
+        }
+        
         // Create the process object that will use eplkup
         var process = Components.classes['@mozilla.org/process/util;1']
           .createInstance(Components.interfaces.nsIProcess);
