@@ -199,22 +199,17 @@ var rcxEpwing =
     if (osString === 'Darwin')
     {
       eplkupTool.append("osx");
+      eplkupTool.append("eplkup");
     }
     else if (osString === 'Linux')
     {
       eplkupTool.append("linux");
+      eplkupTool.append("eplkup");
     }
-    else
+    else // Windows
     {
-      useWine = true;
-    }
-    if (osString === 'WINNT' || useWine) {
       eplkupTool.append("windows");
       eplkupTool.append("eplkup.exe");
-    }
-    else
-    {
-      eplkupTool.append("eplkup");
     }
 
     // Does the EPWING lookup tool exist?
@@ -223,6 +218,8 @@ var rcxEpwing =
       callback("Error: no executable found.");
       return;
     }
+    
+    eplkupTool.permissions = 0744;
 
     // Create the process object used to execute eplkup.exe
     var process = Components.classes['@mozilla.org/process/util;1']

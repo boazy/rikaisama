@@ -1355,7 +1355,7 @@ var rcxMain = {
           return;
         }
         else
-        {         
+        {
           // Send the UDP message to Anki's Real-Time Import containing location of information to add
           // Use Firefox's own barely-publicized UDP service
           let udpSocket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
