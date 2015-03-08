@@ -3088,6 +3088,17 @@ var rcxMain = {
 		if (!this.isVisible()) return;
 		if ((rcxConfig.nopopkeys) && (ev.keyCode != 16)) return;
 
+    // Convert number row =/- to numpad +/-
+    switch (ev.keyCode)
+    {
+    case 61:
+      ev.keyCode = 107;
+      break;
+    case 173:
+      ev.keyCode = 109;
+      break;
+    }
+
 		var i;
     
 		switch (ev.keyCode) 
